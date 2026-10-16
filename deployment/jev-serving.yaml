@@ -1,53 +1,22 @@
-# SAP AI Core Deployment Guide for jev-aicore-proxy
-# =============================================================================
-# Prerequisites (fill in the placeholders before running any commands):
-#
-#   REGISTRY          - Your container registry host, e.g. docker.io/myorg
-#   AICORE_BASE_URL   - From your SAP BTP AI Core service key
-#   AICORE_TOKEN      - OAuth2 bearer token (see README.md for how to obtain)
-#   AICORE_RG         - Resource group (e.g. "default")
-#   GIT_REPO_URL      - HTTPS URL of the Git repo that holds this deployment/ folder
-#   OBJECT_STORE_NAME - Name of the registered object store (if any; not required for
-#                       a pure proxy container)
-#
-# The jev-serving.yaml below should be committed to a Git repository and then
-# registered with SAP AI Core as a repository sync (Application).
-# =============================================================================
-
----
-# jev-serving.yaml
-#
-# SAP AI Core ServingTemplate — jev-aicore-proxy
-#
-# This file describes a KServe-based serving template that deploys the
-# jev-aicore-proxy FastAPI container.  The container proxies structured
-# System One inference requests from SAP AI Core consumers to OpenRouter/Jev.
-#
-# References:
-#   https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/serving-templates
-#   https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/secrets
-# =============================================================================
-
 apiVersion: ai.sap.com/v1alpha1
 kind: ServingTemplate
 metadata:
   name: jev-proxy-serving
   annotations:
-    # Required: Scenario this template belongs to.
-    # Must match the scenario ID registered with AI Core.
+    scenarios.ai.sap.com/id: "jev-proxy"
+    scenarios.ai.sap.com/name: "jev-proxy"
     scenarios.ai.sap.com/description: "Jev TypeSafe proxy via OpenRouter"
-    scenarios.ai.sap.com/name: "jev-proxy"                   # <-- CHANGE if you use a different scenario name
-    # Required: The executable ID for this serving configuration.
-    executables.ai.sap.com/description: "FastAPI proxy for jev-1.13 via OpenRouter"
+    executables.ai.sap.com/id: "jev-proxy-serving"
     executables.ai.sap.com/name: "jev-proxy-serving"
+    executables.ai.sap.com/description: "FastAPI proxy for jev-1.13 via OpenRouter"
   labels:
-    scenarios.ai.sap.com/id: "jev-proxy"                     # <-- MUST match scenarios.ai.sap.com/name above
+    scenarios.ai.sap.com/id: "jev-proxy"
     executables.ai.sap.com/id: "jev-proxy-serving"
     ai.sap.com/version: "1.0.0"
 spec:
   inputs:
-    parameters: []          # No tunable parameters for this proxy
-    artifacts: []           # No training artifacts; the proxy holds no model weights
+    parameters: []
+    artifacts: []
   template:
     apiVersion: "serving.kserve.io/v1beta1"
     metadata:
@@ -56,25 +25,11 @@ spec:
         autoscaling.knative.dev/target: "1"
         autoscaling.knative.dev/targetBurstCapacity: "0"
       labels:
-        ai.sap.com/resourcePlan: "starter"    # CPU-only, minimal resources (no GPU needed)
-                                               # Other options: free, starter, basic, train.l, etc.
-                                               # Verify available plans via the AI Core API:
-                                               #   GET /v2/lm/resourcePlans
+        ai.sap.com/resourcePlan: "starter"
     spec:
       predictor:
         imagePullSecrets:
-          # Name of the Docker registry secret registered in AI Core.
-          # Registry: ghcr.io (GitHub Container Registry)
-          # Register with:
-          #   POST /v2/admin/dockerRegistrySecrets
-          #   {
-          #     "name": "ghcr-secret",
-          #     "data": {
-          #       "ghcr.io": {"username": "i780801", "password": "<GitHub PAT with read:packages>"}
-          #     }
-          #   }
           - name: ghcr-secret
-
         containers:
           - name: kserve-container
             image: ghcr.io/i780801/jev-proxy:1.0.0
@@ -88,28 +43,12 @@ spec:
               - "0.0.0.0"
               - "--port"
               - "8080"
-
             env:
-              # Inject the OpenRouter API key from an AI Core Generic Secret.
-              # Create the secret before deploying:
-              #
-              #   POST /v2/admin/secrets
-              #   {
-              #     "name": "openrouter-key",
-              #     "data": {
-              #       "OPENROUTER_API_KEY": "<base64-encoded key>"
-              #     }
-              #   }
-              #
-              # NOTE: The "data" values must be base64-encoded.
-              # Encode:  echo -n "sk-or-v1-..." | base64
-              #
               - name: OPENROUTER_API_KEY
                 valueFrom:
                   secretKeyRef:
-                    name: openrouter-key          # <-- CHANGE if you used a different secret name
+                    name: openrouter-key
                     key: OPENROUTER_API_KEY
-
             resources:
               requests:
                 cpu: "200m"
@@ -117,7 +56,6 @@ spec:
               limits:
                 cpu: "1"
                 memory: "512Mi"
-
             readinessProbe:
               httpGet:
                 path: /v2/health
@@ -125,7 +63,6 @@ spec:
               initialDelaySeconds: 5
               periodSeconds: 10
               failureThreshold: 3
-
             livenessProbe:
               httpGet:
                 path: /v2/health
