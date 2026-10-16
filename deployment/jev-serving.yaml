@@ -21,6 +21,6 @@ spec:
     apiVersion: "serving.kserve.io/v1beta1"
     metadata:
       name: jev-proxy
-      annotations: '{"autoscaling.knative.dev/metric":"concurrency","autoscaling.knative.dev/target":"1","autoscaling.knative.dev/targetUtilizationPercentage":"70"}'
-      labels: '{"ai.sap.com/resourcePlan":"starter"}'
-    spec: '{"predictor":{"imagePullSecrets":[{"name":"ghcr-secret"}],"minReplicas":1,"maxReplicas":2,"containers":[{"name":"kserve-container","image":"ghcr.io/i780801/jev-proxy:1.0.0","ports":[{"containerPort":8080,"protocol":"TCP"}],"env":[{"name":"OPENROUTER_API_KEY","valueFrom":{"secretKeyRef":{"name":"openrouter-key","key":"OPENROUTER_API_KEY"}}}],"resources":{"requests":{"cpu":"0.5","memory":"512Mi"},"limits":{"cpu":"1","memory":"1Gi"}}}]}}'
+      annotations: "{\"autoscaling.knative.dev/metric\":\"concurrency\",\"autoscaling.knative.dev/target\":\"1\",\"autoscaling.knative.dev/targetUtilizationPercentage\":\"70\"}"
+      labels: "{\"ai.sap.com/resourcePlan\":\"starter\"}"
+    spec: "{\"predictor\":{\"imagePullSecrets\":[{\"name\":\"ghcr-secret\"}],\"minReplicas\":1,\"maxReplicas\":2,\"containers\":[{\"name\":\"kserve-container\",\"image\":\"ghcr.io/i780801/jev-proxy:1.0.0\",\"ports\":[{\"containerPort\":8080,\"protocol\":\"TCP\"}],\"env\":[{\"name\":\"OPENROUTER_API_KEY\",\"valueFrom\":{\"secretKeyRef\":{\"name\":\"openrouter-key\",\"key\":\"OPENROUTER_API_KEY\"}}}],\"resources\":{\"requests\":{\"cpu\":\"0.5\",\"memory\":\"512Mi\"},\"limits\":{\"cpu\":\"1\",\"memory\":\"1Gi\"}}}]}}"
