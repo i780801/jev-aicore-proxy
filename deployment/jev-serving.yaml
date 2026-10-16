@@ -19,24 +19,22 @@ spec:
     artifacts: []
   template:
     apiVersion: "serving.kserve.io/v1beta1"
-    metadata: {}
-    spec:
+    metadata:
+      name: jev-proxy
+      annotations: '{"autoscaling.knative.dev/metric":"concurrency","autoscaling.knative.dev/target":"1","autoscaling.knative.dev/targetUtilizationPercentage":"70"}'
+      labels: '{"ai.sap.com/resourcePlan":"starter"}'
+    spec: |
       predictor:
         imagePullSecrets:
           - name: ghcr-secret
+        minReplicas: 1
+        maxReplicas: 2
         containers:
           - name: kserve-container
             image: ghcr.io/i780801/jev-proxy:1.0.0
             ports:
               - containerPort: 8080
                 protocol: TCP
-            command: ["uvicorn"]
-            args:
-              - "server:app"
-              - "--host"
-              - "0.0.0.0"
-              - "--port"
-              - "8080"
             env:
               - name: OPENROUTER_API_KEY
                 valueFrom:
@@ -45,22 +43,8 @@ spec:
                     key: OPENROUTER_API_KEY
             resources:
               requests:
-                cpu: "200m"
-                memory: "256Mi"
+                cpu: "0.5"
+                memory: "512Mi"
               limits:
                 cpu: "1"
-                memory: "512Mi"
-            readinessProbe:
-              httpGet:
-                path: /v2/health
-                port: 8080
-              initialDelaySeconds: 5
-              periodSeconds: 10
-              failureThreshold: 3
-            livenessProbe:
-              httpGet:
-                path: /v2/health
-                port: 8080
-              initialDelaySeconds: 15
-              periodSeconds: 30
-              failureThreshold: 3
+                memory: "1Gi"
