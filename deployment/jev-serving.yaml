@@ -34,7 +34,7 @@ spec:
         maxReplicas: 2
         containers:
           - name: kserve-container
-            image: ghcr.io/i780801/jev-proxy:1.0.0
+            image: ghcr.io/i780801/jev-proxy:1.0.1
             ports:
               - containerPort: 8080
                 protocol: TCP
