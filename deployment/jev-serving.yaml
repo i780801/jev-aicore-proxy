@@ -19,9 +19,7 @@ spec:
     artifacts: []
   template:
     apiVersion: "serving.kserve.io/v1beta1"
-    metadata:
-      labels:
-        ai.sap.com/resourcePlan: "starter"
+    metadata: {}
     spec:
       predictor:
         imagePullSecrets:
